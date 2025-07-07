@@ -1,0 +1,19 @@
+[project]
+name = "home-stats"
+version = "1.0.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "bcrypt>=4.3.0",
+    "dotenv>=0.9.9",
+    "fastapi>=0.115.14",
+    "httpx>=0.28.1",
+    "passlib>=1.7.4",
+    "psycopg>=3.2.9",
+    "psycopg-pool>=3.2.6",
+    "pydantic>=2.11.7",
+    "pydantic-settings>=2.10.1",
+    "python-jose[cryptography]>=3.5.0",
+    "requests>=2.32.4",
+]
