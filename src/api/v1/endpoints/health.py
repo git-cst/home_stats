@@ -6,7 +6,7 @@ import httpx
 from enum import Enum
 
 from models.server import HealthResponse, HealthStatus, ServiceCheck
-from api.deps import get_db_pool
+from api.v1.deps import get_db_pool
 from core.database import DatabasePool
 from config.settings import get_settings
 

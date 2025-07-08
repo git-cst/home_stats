@@ -1,14 +1,34 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from src.core.database import db_pool
-from src.api.router import api_router
+import asyncio
+
+from core.database import db_pool
+from core.logging_setup import setup_logging
+from db.repositories.user_repo import UserRepository
+from services.user_cleanup import DataCleanupService
+from api.v1.router import api_router
+
+logger = setup_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Ensure that the database connection pool is initialized and closed properly"""
-    db_pool.initialize()
+    global cleanup_service
+    
+    # Startup
+    await db_pool.initialize()
+    
+    # Initialize cleanup service
+    user_repo = UserRepository(db_pool)
+    cleanup_service = DataCleanupService(user_repo, grace_period_days=30)
+    await cleanup_service.start_daily_cleanup()
+    
     yield
-    db_pool.close()
+    
+    # Shutdown
+    if cleanup_service:
+        await cleanup_service.stop_cleanup()
+    await db_pool.close()
+
     
 app = FastAPI(
     title="Home_Stats_API",

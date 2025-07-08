@@ -51,8 +51,23 @@ class DatabasePool:
             id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
             email TEXT NOT NULL UNIQUE,
             hashed_password TEXT NOT NULL,
+            role VARCHAR(20) NOT NULL DEFAULT 'user',
+            is_active BOOLEAN NOT NULL,
+            deleted_at TIMESTAMP NULL,
+            deletion_reason TEXT NULL,
             created_at TIMESTAMP NOT NULL DEFAULT NOW(),
             updated_at TIMESTAMP NOT NULL
+        );
+        """
+
+        permissions_schema = """
+        CREATE TABLE IF NOT EXISTS user_permissions (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            permission VARCHAR(50) NOT NULL,
+            granted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            granted_by INTEGER REFERENCES users(id),
+            UNIQUE(user_id, permission)
         );
         """
 
@@ -87,8 +102,17 @@ class DatabasePool:
         --user indices
         CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user
         ON refresh_tokens(user_id, expires_at);
-        """
 
+        CREATE INDEX IF NOT EXISTS idx_users_deleted_at 
+        ON users(deleted_at) WHERE deleted_at IS NOT NULL;
+
+        CREATE INDEX IF NOT EXISTS idx_users_active_not_deleted 
+        ON users(is_active, deleted_at) WHERE is_active = true AND deleted_at IS NULL;
+
+        --permissions index
+        CREATE INDEX IF NOT EXISTS idx_user_permissions_user_permission 
+        ON user_permissions(user_id, permission);
+        """
 
         database_schema = "".join(user_schema,
                                   spotify_token_schema,
